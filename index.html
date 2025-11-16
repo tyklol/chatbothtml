@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Bot</title>
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Enable dark mode
+            theme: {
+                extend: {
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- 2. Use Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https-://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Basic styling for the app */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for chat messages */
+        #chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-messages::-webkit-scrollbar-track {
+            background: #2d3748; /* dark:bg-gray-700 */
+        }
+        #chat-messages::-webkit-scrollbar-thumb {
+            background: #4a5568; /* dark:bg-gray-500 */
+            border-radius: 3px;
+        }
+        #chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #718096; /* dark:bg-gray-400 */
+        }
+    </style>
+</head>
+<body class="h-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center p-4">
+
+    <div class="flex flex-col w-full max-w-2xl h-[80vh] bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-hidden">
+        
+        <!-- Header -->
+        <div class="border-b border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+            <h1 class="text-xl font-semibold text-center">AI Assistant</h1>
+            <p class="text-sm text-center text-gray-500 dark:text-gray-400">Powered by Gemini 2.5 Pro</p>
+        </div>
+
+        <!-- API Key Input -->
+        <!-- 
+            [Gemini note: Removed the API key input field. 
+            The key is now hard-coded in the script below as requested.
+            Please see my security warning in the chat.]
+        -->
+
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="flex-1 p-4 space-y-4 overflow-y-auto">
+            <!-- Example AI message -->
+            <div class="flex">
+                <div class="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a7 7 0 00-7 7c0 3.866 3.134 7 7 7s7-3.134 7-7a7 7 0 00-7-7zM8 9a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1zm0 4a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="bg-gray-200 dark:bg-gray-700 p-3 rounded-lg max-w-xs sm:max-w-md">
+                    <p class="text-sm">Hello! How can I help you today?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" class="hidden p-4 flex items-center space-x-2">
+            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center mr-3 opacity-70">
+                <svg class="w-5 h-5 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+            <div class="bg-gray-200 dark:bg-gray-700 p-3 rounded-lg opacity-70">
+                <p class="text-sm italic">AI is thinking...</p>
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="border-t border-gray-200 dark:border-gray-700 p-4">
+            <form id="chat-form" class="flex items-center space-x-3">
+                <input 
+                    type="text" 
+                    id="message-input" 
+                    placeholder="Type your message..." 
+                    autocomplete="off"
+                    class="flex-1 block w-full rounded-md border-0 py-2 px-3.5 text-gray-900 dark:text-white bg-white dark:bg-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm"
+                >
+                <button 
+                    type="submit" 
+                    class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
+                >
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v2.5h-2.5a.75.75 0 000 1.5h2.5v2.5a.75.75 0 001.5 0v-2.5h2.5a.75.75 0 000-1.5h-2.5v-2.5z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="sr-only">Send</span>
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- [Gemini note]: The old <script> is removed and replaced with this new <script type="module"> -->
+    <script type="module">
+        // 3. JavaScript Logic (using @google/generative-ai SDK)
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // --- UI Elements ---
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const sendButton = chatForm.querySelector('button');
+
+        // --- API Key & Model ---
+        // IMPORTANT: Hard-coded API key as requested.
+        // This is a major security risk. Do not share this file.
+        const apiKey = "AIzaSyAPmT6nfY2X0Dd_5T4O3ZGwYuPMyP-MCKI";
+
+        let genAI;
+        let model;
+        let chat;
+
+        try {
+            genAI = new GoogleGenerativeAI(apiKey);
+            model = genAI.getGenerativeModel({
+                model: "gemini-2.5-pro", // Using Pro model
+                systemInstruction: {
+                    role: "system",
+                    parts: [{ text: "Act as a helpful and friendly assistant. Keep your answers concise and easy to understand." }]
+                }
+            });
+
+            // Initialize the chat. The history will build as we go.
+            // The first message in the UI is for display only and not part of the 'real' history.
+            chat = model.startChat({
+                history: []
+            });
+
+        } catch (error) {
+            console.error("Failed to initialize AI:", error);
+            // Display error in the chat window
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'flex';
+            errorDiv.innerHTML = `
+                <div class="flex-shrink-0 h-8 w-8 rounded-full bg-red-500 flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 text-red-800 dark:text-red-100 p-3 rounded-lg max-w-xs sm:max-w-md">
+                    <p class="text-sm"><b>Error:</b> Failed to initialize AI. This is likely due to an invalid API key. Please check the console for details. ${error.message}</p>
+                </div>
+            `;
+            chatMessages.appendChild(errorDiv);
+            toggleForm(false); // Disable form
+            messageInput.disabled = true;
+        }
+
+
+        // --- Event Listeners ---
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+            if (!chat) {
+                addMessageToUI("<b>Error:</b> AI is not initialized. Check console for errors.", 'model');
+                return;
+            }
+
+            // Add user message to UI
+            addMessageToUI(message, 'user');
+            const oldMessage = messageInput.value; // Save in case of error
+            messageInput.value = '';
+            // Disable form while AI is thinking
+            toggleForm(false);
+            
+            try {
+                // Call the AI using the SDK
+                const result = await chat.sendMessage(message);
+                const response = result.response;
+                
+                if (!response) {
+                    throw new Error("No response from API.");
+                }
+
+                const aiResponse = response.text();
+
+                // Add AI message to UI
+                addMessageToUI(aiResponse, 'model');
+
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                let errorMessage = `Error: Could not get a response. ${error.message}`;
+                if (error.message && error.message.includes('400')) {
+                    errorMessage = "<b>Error:</b> Bad request. This might be due to an issue with the API key or model permissions. Please check your Google AI Studio project.";
+                } else if (error.message && error.message.includes('API key not valid')) {
+                    errorMessage = "<b>Error:</b> The API key is not valid. Please make sure it's correct.";
+                }
+                
+                addMessageToUI(errorMessage, 'model');
+                messageInput.value = oldMessage; // Put user's message back on error
+            } finally {
+                // Re-enable form
+                toggleForm(true);
+            }
+        });
+
+        // --- UI Helper Functions ---
+        function addMessageToUI(message, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'flex';
+            
+            if (sender === 'user') {
+                messageElement.classList.add('justify-end');
+                messageElement.innerHTML = `
+                    <div class="bg-indigo-600 text-white p-3 rounded-lg max-w-xs sm:max-w-md">
+                        <p class="text-sm">${message}</p>
+                    </div>
+                `;
+            } else { // sender === 'model'
+                // Sanitize potential HTML in AI response, but allow <b>
+                let safeMessage = message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                safeMessage = safeMessage.replace(/&lt;b&gt;/g, "<b>").replace(/&lt;\/b&gt;/g, "</b>");
+
+                // Basic markdown-like formatting for links
+                const formattedMessage = safeMessage
+                    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-indigo-400 underline">$1</a>')
+                    .replace(/\n/g, '<br>'); // Add line breaks
+
+                messageElement.innerHTML = `
+                    <div class="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center mr-3">
+                        <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a7 7 0 00-7 7c0 3.866 3.134 7 7 7s7-3.134 7-7a7 7 0 00-7-7zM8 9a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1zm0 4a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="bg-gray-200 dark:bg-gray-700 p-3 rounded-lg max-w-xs sm:max-w-md">
+                        <p class="text-sm">${formattedMessage}</p>
+                    </div>
+                `;
+            }
+            
+            chatMessages.appendChild(messageElement);
+            // Scroll to the new message
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function toggleForm(enabled) {
+            if (enabled) {
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                loadingIndicator.classList.add('hidden');
+            } else {
+                messageInput.disabled = true;
+                sendButton.disabled = true;
+                loadingIndicator.classList.remove('hidden');
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
